@@ -339,11 +339,20 @@ class PomodoroTimer {
         // Uncomment this section and comment out Option 2 when you have audio files
         /*
         const audioFiles = {
-            'white': 'audio/white-noise.mp3',
-            'rain': 'audio/rain.mp3',
-            'lofi': 'audio/lofi.mp3'
+          white: 'audio/White.mp3',
+          rain: 'audio/Rain.mp3',
+          lofi: 'audio/LoFi.mp3',
+          lofistudy: 'audio/LoFi Study.mp3',
+          lofimovie: 'audio/LoFi Movie.mp3',
+          forest: 'audio/Forest.mp3',
+          brown: 'audio/Brown.mp3',
+          beethoven: 'audio/Beethoven.mp3',
+          bar: 'audio/Bar.mp3',
+          hz75: 'audio/75 HZ.mp3'
         };
-        this.ambientSound.src = audioFiles[this.currentAmbient];
+        if (audioFiles[this.currentAmbient]) {
+          this.ambientSound.src = audioFiles[this.currentAmbient];
+        }
         */
         
         // OPTION 2: Using online streaming URLs (Current - for testing)
