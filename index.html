@@ -5,28 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A beautiful, minimalist Pomodoro timer with ambient sounds for deep focus">
     <meta name="theme-color" content="#000000">
-    
-    <!-- PWA Meta Tags -->
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Focus">
-    
+
     <title>Focus - Minimalist Pomodoro Timer</title>
-    
-    <!-- Favicon -->
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='none' stroke='black' stroke-width='10'/></svg>">
-    
-    <!-- Stylesheets -->
+
     <link rel="stylesheet" href="css/main.css">
-    
-    <!-- PWA Manifest -->
+
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <!-- Subtle noise texture -->
     <div class="noise"></div>
-    
-    <!-- Theme Toggle -->
+    <div class="grain-animation" id="grainAnimation"></div>
+
     <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
         <svg class="theme-icon sun-icon" id="sunIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="5"></circle>
@@ -44,20 +39,15 @@
         </svg>
     </button>
 
-    <!-- Main Container -->
     <div class="container">
-        <!-- Header -->
         <header class="app-header">
             <h1 class="app-title">FOCUS</h1>
             <div class="session-dots" id="sessionDots">
-                <!-- Will be populated by JS -->
-            </div>
+                </div>
         </header>
 
-        <!-- Timer Card -->
         <div class="timer-card">
             <div class="timer-wrapper">
-                <!-- Circular Timer -->
                 <div class="circular-timer">
                     <svg class="timer-svg" viewBox="0 0 280 280">
                         <circle class="timer-circle-bg" cx="140" cy="140" r="130"></circle>
@@ -73,14 +63,12 @@
                 </div>
             </div>
 
-            <!-- Controls -->
             <div class="controls">
                 <button class="btn btn-primary" id="startBtn">
                     <span class="btn-text">START</span>
                 </button>
             </div>
 
-            <!-- Mode Selector -->
             <div class="mode-tabs">
                 <button class="mode-tab active" data-mode="focus" data-time="25">Focus</button>
                 <button class="mode-tab" data-mode="short" data-time="5">Short</button>
@@ -88,7 +76,6 @@
             </div>
         </div>
 
-        <!-- Quick Stats -->
         <div class="stats-row">
             <div class="stat-item">
                 <svg class="stat-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -117,7 +104,6 @@
             </div>
         </div>
 
-        <!-- Ambient Sound Selector -->
         <div class="ambient-selector">
             <button class="ambient-btn active" data-sound="none">
                 <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -150,9 +136,51 @@
                 </svg>
                 <span class="ambient-label">Lofi</span>
             </button>
+            <button class="ambient-btn" data-sound="lofi_study">
+                <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                <span class="ambient-label">Lofi Study</span>
+            </button>
+            <button class="ambient-btn" data-sound="lofi_movie">
+                <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                <span class="ambient-label">Lofi Movie</span>
+            </button>
+            <button class="ambient-btn" data-sound="forest">
+                <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z"></path></svg>
+                <span class="ambient-label">Forest</span>
+            </button>
+            <button class="ambient-btn" data-sound="brown">
+                 <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+                <span class="ambient-label">Brown</span>
+            </button>
+            <button class="ambient-btn" data-sound="beethoven">
+                 <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                <span class="ambient-label">Beethoven</span>
+            </button>
+            <button class="ambient-btn" data-sound="bar">
+                <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                <span class="ambient-label">Bar</span>
+            </button>
+            <button class="ambient-btn" data-sound="hz75">
+                <svg class="ambient-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path></svg>
+                <span class="ambient-label">75hz</span>
+            </button>
+        </div>
+        
+        <div class="audio-controls">
+            <button class="mute-btn" id="muteBtn">
+                <svg class="mute-icon" id="volumeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <svg class="mute-icon" id="muteIcon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            </button>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.3">
         </div>
 
-        <!-- Settings (Minimal) -->
         <div class="settings-row">
             <button class="setting-btn" id="settingsBtn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -180,22 +208,18 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <p>Copyright © <span id="currentYear"></span> • Designed with ❤️ by <a href="https://dee7studio.com" target="_blank" rel="noopener">Dee7 Studio</a></p>
     </footer>
 
-    <!-- Notification -->
     <div class="notification" id="notification">
         <span id="notificationText"></span>
     </div>
 
-    <!-- Audio Elements -->
     <audio id="notificationSound" preload="auto">
         <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBiyNz+7Yg0IJHGat7OekUBMJPqDb8smAMQUuhM/x0YlEChht4+64Zs" type="audio/wav">
     </audio>
 
-    <!-- Scripts -->
     <script src="js/app.js"></script>
 </body>
 </html>
