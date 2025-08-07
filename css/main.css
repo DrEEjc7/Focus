@@ -379,6 +379,12 @@ body {
     /* No hover effects - keeping it calm and minimal */
 }
 
+.stat-icon {
+    color: var(--text-tertiary);
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
 .stat-value {
     font-size: 24px;
     font-weight: 600;
@@ -429,8 +435,9 @@ body {
 }
 
 .ambient-icon {
-    font-size: 20px;
-    line-height: 1;
+    width: 20px;
+    height: 20px;
+    color: currentColor;
 }
 
 .ambient-label {
