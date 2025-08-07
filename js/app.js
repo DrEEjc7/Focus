@@ -335,18 +335,33 @@ class PomodoroTimer {
         this.ambientSound.loop = true;
         this.ambientSound.volume = 0.3;
         
-        // Set source based on selection
-        const sources = {
-            'white': 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAABCxAgAEABAAZGF0YQAAAAA=', // Placeholder
-            'rain': 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAABCxAgAEABAAZGF0YQAAAAA=', // Placeholder
-            'lofi': 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAABCxAgAEABAAZGF0YQAAAAA=' // Placeholder
+        // OPTION 1: Using hosted audio files (Recommended for GitHub Pages)
+        // Uncomment this section and comment out Option 2 when you have audio files
+        /*
+        const audioFiles = {
+            'white': 'audio/white-noise.mp3',
+            'rain': 'audio/rain.mp3',
+            'lofi': 'audio/lofi.mp3'
+        };
+        this.ambientSound.src = audioFiles[this.currentAmbient];
+        */
+        
+        // OPTION 2: Using online streaming URLs (Current - for testing)
+        // Replace these with your actual audio URLs
+        const streamUrls = {
+            'white': 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c96f2c6f18.mp3', // White noise sample
+            'rain': 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3', // Rain sample
+            'lofi': 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_4e100d728a.mp3'  // Lofi sample
         };
         
-        // Note: In production, replace with actual audio URLs
-        // For GitHub Pages, you can host audio files in the repo
-        // this.ambientSound.src = `audio/${this.currentAmbient}.mp3`;
+        if (streamUrls[this.currentAmbient]) {
+            this.ambientSound.src = streamUrls[this.currentAmbient];
+            this.ambientSound.crossOrigin = 'anonymous'; // Required for external URLs
+        }
         
-        this.ambientSound.play().catch(() => {});
+        this.ambientSound.play().catch(() => {
+            console.log('Audio playback failed. User interaction may be required.');
+        });
     }
     
     pauseAmbientSound() {
