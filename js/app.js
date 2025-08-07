@@ -207,9 +207,11 @@ class PomodoroTimer {
             
             // Resume context on user interaction (for Safari/iOS)
             if (this.audioContext.state === 'suspended') {
-                document.addEventListener('click', () => {
+                const resume = () => {
                     this.audioContext.resume();
-                }, { once: true });
+                    document.removeEventListener('click', resume);
+                }
+                document.addEventListener('click', resume);
             }
         } catch (e) {
             console.log('Web Audio API not supported');
@@ -449,9 +451,7 @@ class PomodoroTimer {
             lofi_movie: 'audio/lofi_movie.mp3',
             forest: 'audio/forest.mp3',
             brown: 'audio/brown.mp3',
-            beethoven: 'audio/beethoven.mp3',
-            bar: 'audio/bar.mp3',
-            hz75: 'audio/75hz.mp3'
+            '75hz': 'audio/75hz.mp3'
         };
         return audioFiles[sound];
     }
@@ -524,9 +524,11 @@ class PomodoroTimer {
                     this.audioContext.resume();
                 }
                 
-                this.source = this.audioContext.createMediaElementSource(this.ambientSound);
-                this.source.connect(this.analyser);
-                this.analyser.connect(this.audioContext.destination);
+                if (!this.source) {
+                    this.source = this.audioContext.createMediaElementSource(this.ambientSound);
+                    this.source.connect(this.analyser);
+                    this.analyser.connect(this.audioContext.destination);
+                }
                 this.startVisualizer();
             } catch (e) {
                 // Audio element might already be connected
