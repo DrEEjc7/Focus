@@ -10,24 +10,27 @@ class PomodoroTimer {
             short: 5,
             long: 15
         };
-        
+
         // Timer state
         this.currentMode = 'focus';
         this.timeLeft = this.settings.focus * 60;
         this.totalTime = this.settings.focus * 60;
         this.isRunning = false;
         this.interval = null;
-        
+
         // Session tracking
         this.currentSession = 1;
         this.sessionsToday = 0;
         this.totalFocusTime = 0;
         this.streak = 0;
-        
+
         // Audio
         this.ambientSound = null;
+        this.previewSound = null;
         this.currentAmbient = 'none';
-        
+        this.volume = 0.3;
+        this.isMuted = false;
+
         // Initialize
         this.initElements();
         this.initEventListeners();
@@ -36,11 +39,11 @@ class PomodoroTimer {
         this.initTheme();
         this.initSessionDots();
         this.updateStats();
-        
+
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
     }
-    
+
     initElements() {
         this.elements = {
             // Timer elements
@@ -69,43 +72,59 @@ class PomodoroTimer {
             notificationText: document.getElementById('notificationText'),
             notificationSound: document.getElementById('notificationSound'),
             sessionDots: document.getElementById('sessionDots'),
-            themeToggle: document.getElementById('themeToggle')
+            themeToggle: document.getElementById('themeToggle'),
+            grainAnimation: document.getElementById('grainAnimation'),
+            muteBtn: document.getElementById('muteBtn'),
+            volumeSlider: document.getElementById('volumeSlider'),
+            volumeIcon: document.getElementById('volumeIcon'),
+            muteIcon: document.getElementById('muteIcon')
         };
     }
-    
+
     initEventListeners() {
         // Main button
         this.elements.startBtn.addEventListener('click', () => this.toggleTimer());
-        
+
         // Mode tabs
         document.querySelectorAll('.mode-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
                 if (!this.isRunning) {
-                    this.switchMode(e.target.dataset.mode, parseInt(e.target.dataset.time));
+                    this.switchMode(e.target.dataset.mode);
                 }
             });
         });
-        
+
         // Ambient sounds
         document.querySelectorAll('.ambient-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const sound = e.currentTarget.dataset.sound;
                 this.setAmbientSound(sound);
             });
+            btn.addEventListener('mouseenter', (e) => {
+                const sound = e.currentTarget.dataset.sound;
+                this.previewAmbientSound(sound);
+            });
+            btn.addEventListener('mouseleave', () => {
+                this.stopPreviewSound();
+            });
         });
-        
+
+        // Audio Controls
+        this.elements.muteBtn.addEventListener('click', () => this.toggleMute());
+        this.elements.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+
         // Settings
         this.elements.settingsBtn.addEventListener('click', () => {
             this.elements.settingsPanel.classList.toggle('active');
         });
-        
+
         this.elements.focusDuration.addEventListener('change', () => this.updateSettings());
         this.elements.shortDuration.addEventListener('change', () => this.updateSettings());
         this.elements.longDuration.addEventListener('change', () => this.updateSettings());
-        
+
         // Theme toggle
         this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
-        
+
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
@@ -113,7 +132,7 @@ class PomodoroTimer {
                 this.toggleTimer();
             }
         });
-        
+
         // Close settings when clicking outside
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.settings-row')) {
@@ -121,19 +140,19 @@ class PomodoroTimer {
             }
         });
     }
-    
+
     initTheme() {
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-theme', savedTheme);
     }
-    
+
     toggleTheme() {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
     }
-    
+
     initSessionDots() {
         this.elements.sessionDots.innerHTML = '';
         for (let i = 0; i < 4; i++) {
@@ -143,7 +162,7 @@ class PomodoroTimer {
             this.elements.sessionDots.appendChild(dot);
         }
     }
-    
+
     updateSessionDots() {
         const dots = this.elements.sessionDots.querySelectorAll('.session-dot');
         dots.forEach((dot, index) => {
@@ -155,20 +174,20 @@ class PomodoroTimer {
             }
         });
     }
-    
-    switchMode(mode, time) {
+
+    switchMode(mode) {
         this.currentMode = mode;
-        this.timeLeft = time * 60;
-        this.totalTime = time * 60;
+        this.timeLeft = this.settings[this.currentMode] * 60;
+        this.totalTime = this.settings[this.currentMode] * 60;
         this.updateDisplay();
         this.updateProgress();
-        
+
         // Update active tab
         document.querySelectorAll('.mode-tab').forEach(tab => {
             tab.classList.remove('active');
         });
         document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
-        
+
         // Update label
         const labels = {
             focus: 'FOCUS',
@@ -177,7 +196,7 @@ class PomodoroTimer {
         };
         this.elements.timerLabel.textContent = labels[mode];
     }
-    
+
     toggleTimer() {
         if (this.isRunning) {
             this.pauseTimer();
@@ -185,82 +204,82 @@ class PomodoroTimer {
             this.startTimer();
         }
     }
-    
+
     startTimer() {
         this.isRunning = true;
         this.elements.startBtn.querySelector('.btn-text').textContent = 'PAUSE';
         this.elements.timerTime.classList.add('breathing');
-        
+
         // Start ambient sound if selected
         this.playAmbientSound();
-        
+
         this.interval = setInterval(() => {
             this.timeLeft--;
             this.updateDisplay();
             this.updateProgress();
-            
+
             if (this.timeLeft <= 0) {
                 this.completeTimer();
             }
         }, 1000);
     }
-    
+
     pauseTimer() {
         this.isRunning = false;
         this.elements.startBtn.querySelector('.btn-text').textContent = 'START';
         this.elements.timerTime.classList.remove('breathing');
         clearInterval(this.interval);
-        
+
         // Pause ambient sound
         this.pauseAmbientSound();
     }
-    
+
     resetTimer() {
         this.pauseTimer();
         this.timeLeft = this.totalTime;
         this.updateDisplay();
         this.updateProgress();
     }
-    
+
     completeTimer() {
         this.pauseTimer();
-        
+
         // Play notification sound
         this.elements.notificationSound.play().catch(() => {});
-        
+
         if (this.currentMode === 'focus') {
             this.sessionsToday++;
             this.totalFocusTime += this.settings.focus;
             this.updateStats();
-            
+
             // Update session dots
             if (this.currentSession === 4) {
                 this.currentSession = 1;
                 this.initSessionDots();
-                this.switchMode('long', this.settings.long);
+                this.switchMode('long');
                 this.showNotification('🎉 Great work! Time for a long break');
             } else {
                 this.currentSession++;
                 this.updateSessionDots();
-                this.switchMode('short', this.settings.short);
+                this.switchMode('short');
                 this.showNotification('✨ Focus session complete! Take a break');
             }
         } else {
             // Break finished
-            this.switchMode('focus', this.settings.focus);
+            this.switchMode('focus');
             this.showNotification('💪 Break over! Ready to focus?');
         }
-        
+
         // Save progress
         this.saveProgress();
     }
-    
+
     updateDisplay() {
         const minutes = Math.floor(this.timeLeft / 60);
         const seconds = this.timeLeft % 60;
-        this.elements.timerTime.textContent = 
+        this.elements.timerTime.textContent =
             `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
+
         // Update page title
         if (this.isRunning) {
             document.title = `${this.elements.timerTime.textContent} - Focus`;
@@ -268,17 +287,17 @@ class PomodoroTimer {
             document.title = 'Focus - Minimalist Pomodoro Timer';
         }
     }
-    
+
     updateProgress() {
         const progress = (this.timeLeft / this.totalTime);
         const circumference = 2 * Math.PI * 130; // radius = 130
-        const offset = circumference * progress;
+        const offset = circumference * (1 - progress);
         this.elements.timerProgress.style.strokeDashoffset = offset;
     }
-    
+
     updateStats() {
         this.elements.todayCount.textContent = this.sessionsToday;
-        
+
         const hours = Math.floor(this.totalFocusTime / 60);
         const minutes = this.totalFocusTime % 60;
         if (hours > 0) {
@@ -286,86 +305,82 @@ class PomodoroTimer {
         } else {
             this.elements.focusTime.textContent = `${minutes}m`;
         }
-        
+
         this.elements.streakCount.textContent = this.streak;
     }
-    
+
     updateSettings() {
         this.settings.focus = parseInt(this.elements.focusDuration.value);
         this.settings.short = parseInt(this.elements.shortDuration.value);
         this.settings.long = parseInt(this.elements.longDuration.value);
-        
+
         // Update current timer if not running
         if (!this.isRunning) {
-            const currentSetting = this.settings[this.currentMode];
-            this.timeLeft = currentSetting * 60;
-            this.totalTime = currentSetting * 60;
-            this.updateDisplay();
-            this.updateProgress();
+            this.switchMode(this.currentMode);
         }
-        
+
         this.saveSettings();
     }
-    
+    getAudioPath(sound) {
+        const audioFiles = {
+            white: 'audio/white.mp3',
+            rain: 'audio/rain.mp3',
+            lofi: 'audio/lofi.mp3',
+            lofi_study: 'audio/lofi_study.mp3',
+            lofi_movie: 'audio/lofi_movie.mp3',
+            forest: 'audio/forest.mp3',
+            brown: 'audio/brown.mp3',
+            beethoven: 'audio/beethoven.mp3',
+            bar: 'audio/bar.mp3',
+            hz75: 'audio/75hz.mp3'
+        };
+        return audioFiles[sound];
+    }
     setAmbientSound(sound) {
         // Update UI
         document.querySelectorAll('.ambient-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         document.querySelector(`[data-sound="${sound}"]`).classList.add('active');
-        
+
         // Stop current sound
         this.stopAmbientSound();
-        
+
         this.currentAmbient = sound;
         
+        if (sound !== 'none') {
+            this.elements.grainAnimation.classList.add('active');
+        } else {
+            this.elements.grainAnimation.classList.remove('active');
+        }
+
         // Start new sound if timer is running
-        if (this.isRunning && sound !== 'none') {
+        if (this.isRunning) {
             this.playAmbientSound();
         }
-        
+
         localStorage.setItem('ambientSound', sound);
     }
-    
-playAmbientSound() {
-    if (this.currentAmbient === 'none') return;
 
-    const audioFiles = {
-        white: 'audio/white.mp3',
-        rain: 'audio/rain.mp3',
-        lofi: 'audio/lofi.mp3',
-        lofi_study: 'audio/lofi_study.mp3',
-        lofi_movie: 'audio/lofi_movie.mp3',
-        forest: 'audio/forest.mp3',
-        brown: 'audio/brown.mp3',
-        beethoven: 'audio/beethoven.mp3',
-        bar: 'audio/bar.mp3',
-        hz75: 'audio/hz75.mp3'
-    };
-
-    this.ambientSound = new Audio();
-    this.ambientSound.loop = true;
-    this.ambientSound.volume = 0.3;
-
-    if (audioFiles[this.currentAmbient]) {
-        this.ambientSound.src = audioFiles[this.currentAmbient];
-        this.ambientSound.crossOrigin = 'anonymous';
+    playAmbientSound() {
+        if (this.currentAmbient === 'none' || !this.getAudioPath(this.currentAmbient)) return;
+        
+        this.ambientSound = new Audio(this.getAudioPath(this.currentAmbient));
+        this.ambientSound.loop = true;
+        this.ambientSound.volume = this.volume;
+        this.ambientSound.muted = this.isMuted;
+        
         this.ambientSound.play().catch(() => {
             console.log('Audio playback failed. User interaction may be required.');
         });
     }
-}       
-        this.ambientSound.play().catch(() => {
-            console.log('Audio playback failed. User interaction may be required.');
-        });
-    }
-    
+
     pauseAmbientSound() {
         if (this.ambientSound) {
             this.ambientSound.pause();
         }
     }
-    
+
     stopAmbientSound() {
         if (this.ambientSound) {
             this.ambientSound.pause();
@@ -373,15 +388,69 @@ playAmbientSound() {
         }
     }
     
+    previewAmbientSound(sound) {
+        if (sound === 'none' || this.previewSound || !this.getAudioPath(sound)) return;
+        
+        this.previewSound = new Audio(this.getAudioPath(sound));
+        this.previewSound.volume = this.volume;
+        this.previewSound.muted = this.isMuted;
+        
+        this.previewSound.play().catch(()=>{});
+    }
+
+    stopPreviewSound() {
+        if (this.previewSound) {
+            this.previewSound.pause();
+            this.previewSound = null;
+        }
+    }
+    
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        
+        if (this.ambientSound) {
+            this.ambientSound.muted = this.isMuted;
+        }
+        if (this.previewSound) {
+            this.previewSound.muted = this.isMuted;
+        }
+        
+        this.updateMuteButton();
+        localStorage.setItem('isMuted', this.isMuted);
+    }
+    
+    setVolume(volume) {
+        this.volume = volume;
+        
+        if (this.ambientSound) {
+            this.ambientSound.volume = this.volume;
+        }
+        if (this.previewSound) {
+            this.previewSound.volume = this.volume;
+        }
+        
+        localStorage.setItem('volume', this.volume);
+    }
+    
+    updateMuteButton() {
+        if (this.isMuted) {
+            this.elements.volumeIcon.style.display = 'none';
+            this.elements.muteIcon.style.display = 'block';
+        } else {
+            this.elements.volumeIcon.style.display = 'block';
+            this.elements.muteIcon.style.display = 'none';
+        }
+    }
+
     showNotification(message) {
         this.elements.notificationText.textContent = message;
         this.elements.notification.classList.add('show');
-        
+
         setTimeout(() => {
             this.elements.notification.classList.remove('show');
         }, 4000);
     }
-    
+
     loadSettings() {
         // Load timer settings
         const savedSettings = localStorage.getItem('timerSettings');
@@ -390,39 +459,42 @@ playAmbientSound() {
             this.elements.focusDuration.value = this.settings.focus;
             this.elements.shortDuration.value = this.settings.short;
             this.elements.longDuration.value = this.settings.long;
-            
-            // Update current timer
-            this.timeLeft = this.settings[this.currentMode] * 60;
-            this.totalTime = this.settings[this.currentMode] * 60;
         }
+
+        // Update current timer
+        this.switchMode(this.currentMode);
+
+        // Load audio settings
+        this.volume = localStorage.getItem('volume') || 0.3;
+        this.elements.volumeSlider.value = this.volume;
+        this.isMuted = localStorage.getItem('isMuted') === 'true';
+        this.updateMuteButton();
         
         // Load ambient sound preference
-        const savedAmbient = localStorage.getItem('ambientSound');
-        if (savedAmbient) {
-            this.currentAmbient = savedAmbient;
-            document.querySelector(`[data-sound="${savedAmbient}"]`).classList.add('active');
-            document.querySelector('[data-sound="none"]').classList.remove('active');
-        }
-        
+        const savedAmbient = localStorage.getItem('ambientSound') || 'none';
+        this.setAmbientSound(savedAmbient);
+
+
         // Load progress
         const savedProgress = localStorage.getItem('pomodoroProgress');
         if (savedProgress) {
             const progress = JSON.parse(savedProgress);
             const today = new Date().toDateString();
-            
+
             if (progress.date === today) {
                 this.sessionsToday = progress.sessions || 0;
                 this.totalFocusTime = progress.focusTime || 0;
             }
-            
+
             this.streak = progress.streak || 0;
         }
+        this.updateStats();
     }
-    
+
     saveSettings() {
         localStorage.setItem('timerSettings', JSON.stringify(this.settings));
     }
-    
+
     saveProgress() {
         const progress = {
             date: new Date().toDateString(),
