@@ -20,7 +20,9 @@
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.08);
     --accent: #000000;
-    --purple-accent: #6a0dad;
+    --purple-accent: #8b5cf6;
+    --purple-dark: #6d28d9;
+    --purple-light: #a78bfa;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -36,6 +38,9 @@
     --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
     --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
     --accent: #ffffff;
+    --purple-accent: #a78bfa;
+    --purple-dark: #8b5cf6;
+    --purple-light: #c4b5fd;
 }
 
 /* ===================================
@@ -53,6 +58,8 @@ body {
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    position: relative;
+    overflow-x: hidden;
 }
 
 /* Subtle noise texture */
@@ -69,37 +76,63 @@ body {
         repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(128, 128, 128, 0.05) 35px, rgba(128, 128, 128, 0.05) 70px);
 }
 
+/* Audio-Reactive Purple Grain Animation */
 .grain-animation {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
     pointer-events: none;
     z-index: 0;
     opacity: 0;
-    transition: opacity 1s ease-in-out;
+    transition: opacity 1s ease-in-out, transform 0.1s ease-out;
+    mix-blend-mode: screen;
 }
 
 .grain-animation.active {
-    opacity: 0.1;
-    background:
-        radial-gradient(ellipse at center, rgba(106, 13, 173, 0.5) 0%, rgba(0,0,0,0) 70%),
-        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(#noise)"/></svg>');
-    animation: grain 8s steps(10) infinite;
+    opacity: 0.08;
+    background: 
+        radial-gradient(ellipse at center, var(--purple-accent) 0%, transparent 40%),
+        radial-gradient(ellipse at top left, var(--purple-light) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, var(--purple-dark) 0%, transparent 50%);
+    animation: grain 8s steps(10) infinite, pulse 4s ease-in-out infinite;
+}
+
+[data-theme="dark"] .grain-animation.active {
+    mix-blend-mode: plus-lighter;
+    opacity: 0.06;
 }
 
 @keyframes grain {
-  0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-5%, -10%); }
-  20% { transform: translate(-15%, 5%); }
-  30% { transform: translate(7%, -25%); }
-  40% { transform: translate(-5%, 25%); }
-  50% { transform: translate(-15%, 10%); }
-  60% { transform: translate(15%, 0%); }
-  70% { transform: translate(0%, 15%); }
-  80% { transform: translate(3%, 35%); }
-  90% { transform: translate(-10%, 10%); }
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    10% { transform: translate(-5%, -10%) rotate(1deg); }
+    20% { transform: translate(-15%, 5%) rotate(-1deg); }
+    30% { transform: translate(7%, -25%) rotate(2deg); }
+    40% { transform: translate(-5%, 25%) rotate(-2deg); }
+    50% { transform: translate(-15%, 10%) rotate(1deg); }
+    60% { transform: translate(15%, 0%) rotate(-1deg); }
+    70% { transform: translate(0%, 15%) rotate(2deg); }
+    80% { transform: translate(3%, 35%) rotate(-1deg); }
+    90% { transform: translate(-10%, 10%) rotate(1deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { filter: blur(40px) brightness(1); }
+    50% { filter: blur(60px) brightness(1.2); }
+}
+
+/* Enhanced Timer Card with potential glow */
+.timer-card {
+    background: var(--bg-secondary);
+    border-radius: 32px;
+    padding: 48px 32px;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.8s ease 0.2s both;
+    transition: box-shadow 0.3s ease;
+    position: relative;
+    z-index: 10;
 }
 
 /* ===================================
@@ -126,6 +159,7 @@ body {
 
 .theme-toggle:hover {
     box-shadow: var(--shadow-md);
+    transform: scale(1.05);
 }
 
 .theme-icon {
@@ -208,26 +242,23 @@ body {
 
 .session-dot.current {
     background: var(--accent);
-    animation: pulse 2s ease-in-out infinite;
+    animation: sessionPulse 2s ease-in-out infinite;
 }
 
-@keyframes pulse {
-    0%, 100% { transform: scale(1.2); opacity: 1; }
-    50% { transform: scale(1.4); opacity: 0.7; }
+@keyframes sessionPulse {
+    0%, 100% { 
+        transform: scale(1.2); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: scale(1.4); 
+        opacity: 0.7; 
+    }
 }
 
 /* ===================================
-   Timer Card
+   Timer Section
    =================================== */
-
-.timer-card {
-    background: var(--bg-secondary);
-    border-radius: 32px;
-    padding: 48px 32px;
-    margin-bottom: 32px;
-    box-shadow: var(--shadow-lg);
-    animation: slideUp 0.8s ease 0.2s both;
-}
 
 .timer-wrapper {
     margin-bottom: 40px;
@@ -393,7 +424,7 @@ body {
 }
 
 /* ===================================
-   Stats Row (No Hover Animation)
+   Stats Row
    =================================== */
 
 .stats-row {
@@ -410,7 +441,6 @@ body {
     background: var(--bg-secondary);
     border-radius: 16px;
     border: 1px solid var(--border);
-    /* No hover effects - keeping it calm and minimal */
 }
 
 .stat-icon {
@@ -440,13 +470,13 @@ body {
 .ambient-selector {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 32px;
+    gap: 8px;
+    margin-bottom: 24px;
     animation: slideUp 0.8s ease 0.6s both;
 }
 
 .ambient-btn {
-    padding: 16px 8px;
+    padding: 12px 4px;
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -465,7 +495,8 @@ body {
 }
 
 .ambient-btn:not(.active):hover {
-    border-color: var(--text-tertiary);
+    border-color: var(--purple-accent);
+    background: var(--bg-tertiary);
 }
 
 .ambient-icon {
@@ -475,9 +506,11 @@ body {
 }
 
 .ambient-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
+    text-align: center;
 }
+
 /* ===================================
    Audio Controls
    =================================== */
@@ -547,6 +580,16 @@ body {
     transition: var(--transition);
 }
 
+.volume-slider:hover::-webkit-slider-thumb {
+    background: var(--purple-accent);
+    transform: scale(1.2);
+}
+
+.volume-slider:hover::-moz-range-thumb {
+    background: var(--purple-accent);
+    transform: scale(1.2);
+}
+
 /* ===================================
    Settings
    =================================== */
@@ -576,6 +619,7 @@ body {
 .setting-btn:hover {
     color: var(--text-primary);
     border-color: var(--text-tertiary);
+    transform: rotate(90deg);
 }
 
 .settings-panel {
@@ -591,6 +635,7 @@ body {
     display: none;
     gap: 16px;
     min-width: 280px;
+    z-index: 50;
 }
 
 .settings-panel.active {
@@ -624,7 +669,7 @@ body {
 
 .setting-item input:focus {
     outline: none;
-    border-color: var(--accent);
+    border-color: var(--purple-accent);
 }
 
 .setting-item span {
@@ -651,7 +696,7 @@ body {
 }
 
 .footer a:hover {
-    color: var(--text-primary);
+    color: var(--purple-accent);
 }
 
 /* ===================================
@@ -706,7 +751,7 @@ body {
    Responsive Design
    =================================== */
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
     .container {
         padding: 80px 16px 32px;
     }
@@ -737,7 +782,12 @@ body {
     }
 
     .ambient-selector {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .audio-controls {
+        flex-direction: column;
+        gap: 12px;
     }
 
     .settings-panel {
@@ -745,5 +795,11 @@ body {
         right: 16px;
         transform: none;
         min-width: auto;
+    }
+}
+
+@media (max-width: 400px) {
+    .ambient-selector {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
