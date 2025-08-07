@@ -354,12 +354,7 @@ playAmbientSound() {
             console.log('Audio playback failed. User interaction may be required.');
         });
     }
-}
-        if (streamUrls[this.currentAmbient]) {
-            this.ambientSound.src = streamUrls[this.currentAmbient];
-            this.ambientSound.crossOrigin = 'anonymous'; // Required for external URLs
-        }
-        
+}       
         this.ambientSound.play().catch(() => {
             console.log('Audio playback failed. User interaction may be required.');
         });
