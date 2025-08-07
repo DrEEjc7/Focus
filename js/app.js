@@ -382,6 +382,7 @@ class PomodoroTimer {
 
         // Save progress
         this.saveProgress();
+        this.startTimer();
     }
 
     updateDisplay() {
@@ -403,7 +404,7 @@ class PomodoroTimer {
     updateProgress() {
         const progress = (this.timeLeft / this.totalTime);
         const circumference = 2 * Math.PI * 130; // radius = 130
-        const offset = circumference * progress;
+        const offset = circumference * (1 - progress);
         this.elements.timerProgress.style.strokeDashoffset = offset;
     }
 
