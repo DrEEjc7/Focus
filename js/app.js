@@ -327,42 +327,34 @@ class PomodoroTimer {
         localStorage.setItem('ambientSound', sound);
     }
     
-    playAmbientSound() {
-        if (this.currentAmbient === 'none') return;
-        
-        // Create audio element for ambient sound
-        this.ambientSound = new Audio();
-        this.ambientSound.loop = true;
-        this.ambientSound.volume = 0.3;
-        
-        // OPTION 1: Using hosted audio files (Recommended for GitHub Pages)
-        // Uncomment this section and comment out Option 2 when you have audio files
-        /*
-        const audioFiles = {
-          white: 'audio/White.mp3',
-          rain: 'audio/Rain.mp3',
-          lofi: 'audio/LoFi.mp3',
-          lofistudy: 'audio/LoFi Study.mp3',
-          lofimovie: 'audio/LoFi Movie.mp3',
-          forest: 'audio/Forest.mp3',
-          brown: 'audio/Brown.mp3',
-          beethoven: 'audio/Beethoven.mp3',
-          bar: 'audio/Bar.mp3',
-          hz75: 'audio/75 HZ.mp3'
-        };
-        if (audioFiles[this.currentAmbient]) {
-          this.ambientSound.src = audioFiles[this.currentAmbient];
-        }
-        */
-        
-        // OPTION 2: Using online streaming URLs (Current - for testing)
-        // Replace these with your actual audio URLs
-        const streamUrls = {
-            'white': 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c96f2c6f18.mp3', // White noise sample
-            'rain': 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3', // Rain sample
-            'lofi': 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_4e100d728a.mp3'  // Lofi sample
-        };
-        
+playAmbientSound() {
+    if (this.currentAmbient === 'none') return;
+
+    const audioFiles = {
+        white: 'audio/white.mp3',
+        rain: 'audio/rain.mp3',
+        lofi: 'audio/lofi.mp3',
+        lofi_study: 'audio/lofi_study.mp3',
+        lofi_movie: 'audio/lofi_movie.mp3',
+        forest: 'audio/forest.mp3',
+        brown: 'audio/brown.mp3',
+        beethoven: 'audio/beethoven.mp3',
+        bar: 'audio/bar.mp3',
+        hz75: 'audio/hz75.mp3'
+    };
+
+    this.ambientSound = new Audio();
+    this.ambientSound.loop = true;
+    this.ambientSound.volume = 0.3;
+
+    if (audioFiles[this.currentAmbient]) {
+        this.ambientSound.src = audioFiles[this.currentAmbient];
+        this.ambientSound.crossOrigin = 'anonymous';
+        this.ambientSound.play().catch(() => {
+            console.log('Audio playback failed. User interaction may be required.');
+        });
+    }
+}
         if (streamUrls[this.currentAmbient]) {
             this.ambientSound.src = streamUrls[this.currentAmbient];
             this.ambientSound.crossOrigin = 'anonymous'; // Required for external URLs
