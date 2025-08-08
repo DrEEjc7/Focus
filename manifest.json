@@ -1,16 +1,157 @@
 {
   "name": "Focus - Minimalist Pomodoro Timer",
   "short_name": "Focus",
-  "description": "Beautiful Pomodoro timer with ambient sounds",
+  "description": "A beautiful, minimalist Pomodoro timer with ambient sounds for deep focus and productivity. No auto-repeat - you control your workflow.",
+  "version": "1.0.2",
   "start_url": "./",
+  "scope": "./",
+  "id": "focus-timer-dee7studio",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "theme_color": "#000000",
   "background_color": "#ffffff",
+  "categories": ["productivity", "lifestyle", "utilities", "health"],
+  "lang": "en",
+  "dir": "ltr",
+  
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><rect width='72' height='72' fill='%23f0f0f0'/><circle cx='36' cy='36' r='28' fill='none' stroke='%23000' stroke-width='4'/><circle cx='36' cy='36' r='6' fill='%23000'/></svg>",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect width='96' height='96' fill='%23f8f9fa'/><circle cx='48' cy='48' r='38' fill='none' stroke='%23000' stroke-width='4'/><circle cx='48' cy='48' r='8' fill='%23000'/></svg>",
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'><rect width='128' height='128' fill='%23ffffff'/><circle cx='64' cy='64' r='50' fill='none' stroke='%23000' stroke-width='6'/><circle cx='64' cy='64' r='10' fill='%23000'/></svg>",
+      "sizes": "128x128",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%23ffffff'/><circle cx='96' cy='96' r='75' fill='none' stroke='%23000' stroke-width='8'/><circle cx='96' cy='96' r='15' fill='%23000'/></svg>",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23ffffff'/><circle cx='256' cy='256' r='200' fill='none' stroke='%23000' stroke-width='20'/><circle cx='256' cy='256' r='40' fill='%23000'/></svg>",
+      "sizes": "512x512", 
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='48' fill='%23000'/><circle cx='96' cy='96' r='60' fill='none' stroke='%23fff' stroke-width='8'/><circle cx='96' cy='96' r='12' fill='%23fff'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
+  ],
+  
+  "shortcuts": [
+    {
+      "name": "Start Focus Session",
+      "short_name": "Focus",
+      "description": "Start a 25-minute focus session immediately",
+      "url": "./?action=start-focus",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><circle cx='48' cy='48' r='35' fill='none' stroke='%23000' stroke-width='6'/><polygon points='38,32 38,64 58,48' fill='%23000'/></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Quick Break",
+      "short_name": "Break", 
+      "description": "Start a 5-minute break session",
+      "url": "./?action=start-break",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><circle cx='48' cy='48' r='35' fill='none' stroke='%23666' stroke-width='6'/><rect x='36' y='36' width='6' height='24' fill='%23666'/><rect x='54' y='36' width='6' height='24' fill='%23666'/></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "description": "Open timer settings and preferences",
+      "url": "./?action=settings",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><circle cx='48' cy='48' r='12' fill='none' stroke='%23666' stroke-width='4'/><path d='M48 4 L52 20 L56 18 L64 30 L60 32 L72 44 L60 56 L64 58 L56 70 L52 68 L48 84 L44 68 L40 70 L32 58 L36 56 L24 44 L36 32 L32 30 L40 18 L44 20 Z' fill='none' stroke='%23666' stroke-width='3'/></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect width='540' height='720' fill='%23fafafa'/><rect x='20' y='60' width='500' height='600' rx='24' fill='%23fff' stroke='%23e0e0e0'/><text x='270' y='120' text-anchor='middle' font-family='system-ui' font-size='32' font-weight='100' fill='%23000' letter-spacing='8'>FOCUS</text><circle cx='270' cy='320' r='120' fill='none' stroke='%23f0f0f0' stroke-width='8'/><circle cx='270' cy='320' r='120' fill='none' stroke='%23000' stroke-width='8' stroke-linecap='round' stroke-dasharray='754' stroke-dashoffset='188'/><text x='270' y='310' text-anchor='middle' font-family='system-ui' font-size='8' fill='%23999' letter-spacing='2'>FOCUS</text><text x='270' y='340' text-anchor='middle' font-family='system-ui' font-size='48' font-weight='100' fill='%23000'>25:00</text><rect x='70' y='480' width='400' height='50' rx='25' fill='%23000'/><text x='270' y='510' text-anchor='middle' font-family='system-ui' font-size='14' font-weight='600' fill='%23fff' letter-spacing='1'>START</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Main timer interface with 25-minute focus session"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect width='540' height='720' fill='%230a0a0a'/><rect x='20' y='60' width='500' height='600' rx='24' fill='%23000' stroke='%232a2a2a'/><text x='270' y='120' text-anchor='middle' font-family='system-ui' font-size='32' font-weight='100' fill='%23fff' letter-spacing='8'>FOCUS</text><circle cx='270' cy='320' r='120' fill='none' stroke='%231a1a1a' stroke-width='8'/><circle cx='270' cy='320' r='120' fill='none' stroke='%23fff' stroke-width='8' stroke-linecap='round' stroke-dasharray='754' stroke-dashoffset='377'/><text x='270' y='310' text-anchor='middle' font-family='system-ui' font-size='8' fill='%23666' letter-spacing='2'>SHORT BREAK</text><text x='270' y='340' text-anchor='middle' font-family='system-ui' font-size='48' font-weight='100' fill='%23fff'>05:00</text><rect x='70' y='480' width='400' height='50' rx='25' fill='%23fff'/><text x='270' y='510' text-anchor='middle' font-family='system-ui' font-size='14' font-weight='600' fill='%23000' letter-spacing='1'>PAUSE</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml", 
+      "form_factor": "narrow",
+      "label": "Dark mode with break session active"
+    }
+  ],
+  
+  "prefer_related_applications": false,
+  "related_applications": [],
+  
+  "protocol_handlers": [
+    {
+      "protocol": "web+focus",
+      "url": "./?focus=%s"
+    }
+  ],
+  
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": {
+      "title": "task",
+      "text": "task",
+      "url": "url"
+    }
+  },
+  
+  "file_handlers": [],
+  
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  
+  "display_override": [
+    "window-controls-overlay", 
+    "standalone",
+    "minimal-ui",
+    "browser"
+  ],
+  
+  "handle_links": "preferred",
+  
+  "scope_extensions": [
+    {"origin": "https://focus.dee7studio.com"}
   ]
 }
