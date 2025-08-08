@@ -103,7 +103,7 @@ class PomodoroTimer {
             });
         });
 
-        // Ambient sounds with error handling
+        // FIXED: Ambient sounds with corrected event handling
         document.querySelectorAll('.ambient-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const sound = e.currentTarget.dataset.sound;
@@ -442,7 +442,11 @@ class PomodoroTimer {
         this.saveSettings();
     }
 
+    // FIXED: Audio path mapping to match the data-sound attributes
     getAudioPath(sound) {
+        if (sound === 'none') return null;
+        
+        // Map sound names to actual file paths
         const audioFiles = {
             white: 'audio/white.mp3',
             rain: 'audio/rain.mp3',
@@ -451,12 +455,17 @@ class PomodoroTimer {
             lofi_movie: 'audio/lofi_movie.mp3',
             forest: 'audio/forest.mp3',
             brown: 'audio/brown.mp3',
+            beethoven: 'audio/beethoven.mp3',
+            bar: 'audio/bar.mp3',
             '75hz': 'audio/75hz.mp3'
         };
-        return audioFiles[sound];
+        
+        return audioFiles[sound] || null;
     }
 
     async setAmbientSound(sound) {
+        console.log('Setting ambient sound:', sound); // Debug log
+        
         // Update UI
         document.querySelectorAll('.ambient-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -500,51 +509,68 @@ class PomodoroTimer {
             await new Promise((resolve, reject) => {
                 audio.addEventListener('canplaythrough', resolve, { once: true });
                 audio.addEventListener('error', reject, { once: true });
+                // Add timeout to prevent hanging
+                setTimeout(() => reject(new Error('Timeout')), 5000);
             });
             this.audioSources.set(sound, path);
+            console.log(`Successfully preloaded: ${sound}`);
         } catch (error) {
-            console.error(`Failed to preload ${sound}:`, error);
-            this.showNotification(`Failed to load ${sound} audio`);
+            console.warn(`Failed to preload ${sound}:`, error);
+            // Show user-friendly message
+            if (error.message !== 'Timeout') {
+                this.showNotification(`Could not load ${sound} audio file`);
+            }
         }
     }
 
     playAmbientSound() {
-        if (this.currentAmbient === 'none' || !this.getAudioPath(this.currentAmbient)) return;
+        if (this.currentAmbient === 'none') return;
         
-        this.ambientSound = new Audio(this.getAudioPath(this.currentAmbient));
-        this.ambientSound.loop = true;
-        this.ambientSound.volume = this.volume;
-        this.ambientSound.muted = this.isMuted;
+        const audioPath = this.getAudioPath(this.currentAmbient);
+        if (!audioPath) return;
         
-        // Connect to audio visualizer
-        if (this.audioContext && this.analyser) {
-            try {
-                // Resume context if suspended
-                if (this.audioContext.state === 'suspended') {
-                    this.audioContext.resume();
+        try {
+            this.ambientSound = new Audio(audioPath);
+            this.ambientSound.loop = true;
+            this.ambientSound.volume = this.volume;
+            this.ambientSound.muted = this.isMuted;
+            
+            // Connect to audio visualizer
+            if (this.audioContext && this.analyser) {
+                try {
+                    // Resume context if suspended
+                    if (this.audioContext.state === 'suspended') {
+                        this.audioContext.resume();
+                    }
+                    
+                    if (!this.source) {
+                        this.source = this.audioContext.createMediaElementSource(this.ambientSound);
+                        this.source.connect(this.analyser);
+                        this.analyser.connect(this.audioContext.destination);
+                    }
+                    this.startVisualizer();
+                } catch (e) {
+                    console.log('Audio routing:', e.message);
                 }
+            }
+            
+            // Play with error handling
+            this.ambientSound.play().catch((error) => {
+                console.log('Audio playback failed:', error);
+                // Show user-friendly message
+                this.showNotification(`Unable to play ${this.currentAmbient} audio`);
                 
-                if (!this.source) {
-                    this.source = this.audioContext.createMediaElementSource(this.ambientSound);
-                    this.source.connect(this.analyser);
-                    this.analyser.connect(this.audioContext.destination);
+                // Try resuming audio context
+                if (this.audioContext && this.audioContext.state === 'suspended') {
+                    this.audioContext.resume().then(() => {
+                        this.ambientSound.play().catch(() => {});
+                    });
                 }
-                this.startVisualizer();
-            } catch (e) {
-                // Audio element might already be connected
-                console.log('Audio routing:', e.message);
-            }
+            });
+        } catch (error) {
+            console.error('Error playing ambient sound:', error);
+            this.showNotification(`Error loading ${this.currentAmbient} audio`);
         }
-        
-        this.ambientSound.play().catch((error) => {
-            console.log('Audio playback failed:', error);
-            // Try resuming audio context
-            if (this.audioContext && this.audioContext.state === 'suspended') {
-                this.audioContext.resume().then(() => {
-                    this.ambientSound.play().catch(() => {});
-                });
-            }
-        });
     }
 
     startVisualizer() {
@@ -633,13 +659,22 @@ class PomodoroTimer {
     }
     
     previewAmbientSound(sound) {
-        if (sound === 'none' || this.previewSound || !this.getAudioPath(sound)) return;
+        if (sound === 'none' || this.previewSound) return;
         
-        this.previewSound = new Audio(this.getAudioPath(sound));
-        this.previewSound.volume = Math.max(0.1, this.volume * 0.5); // Preview at lower volume
-        this.previewSound.muted = this.isMuted;
+        const audioPath = this.getAudioPath(sound);
+        if (!audioPath) return;
         
-        this.previewSound.play().catch(() => {});
+        try {
+            this.previewSound = new Audio(audioPath);
+            this.previewSound.volume = Math.max(0.1, this.volume * 0.5); // Preview at lower volume
+            this.previewSound.muted = this.isMuted;
+            
+            this.previewSound.play().catch((error) => {
+                console.log('Preview sound failed:', error);
+            });
+        } catch (error) {
+            console.error('Error previewing sound:', error);
+        }
     }
 
     stopPreviewSound() {
