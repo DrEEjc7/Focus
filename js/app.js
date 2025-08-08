@@ -27,7 +27,7 @@ class PomodoroTimer {
         // Audio
         this.ambientSound = null;
         this.previewSound = null;
-        this.currentAmbient = 'none';
+        this.currentAmbient = 'none'; // START IN SILENT MODE
         this.volume = 0.3;
         this.isMuted = false;
         
@@ -54,8 +54,7 @@ class PomodoroTimer {
         // Set current year
         document.getElementById('currentYear').textContent = new Date().getFullYear();
         
-        // Show audio unlock overlay if needed
-        this.checkAudioUnlock();
+        // NO AUTO-UNLOCK - start in silent mode
     }
 
     initElements() {
@@ -95,86 +94,97 @@ class PomodoroTimer {
         };
     }
 
-    // NEW: Check if audio unlock is needed
-    checkAudioUnlock() {
-        // Create hidden test audio to check if autoplay works
-        const testAudio = new Audio();
-        testAudio.muted = true;
-        testAudio.volume = 0;
-        
-        testAudio.play().then(() => {
-            this.audioUnlocked = true;
-            console.log('Audio autoplay allowed');
-        }).catch(() => {
-            console.log('Audio autoplay blocked - user interaction required');
-            this.showAudioUnlockOverlay();
-        });
-    }
-
-    // NEW: Show audio unlock overlay
-    showAudioUnlockOverlay() {
-        const overlay = document.createElement('div');
-        overlay.id = 'audio-unlock-overlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            color: white;
-            font-family: inherit;
-        `;
-
-        const content = document.createElement('div');
-        content.style.cssText = `
-            text-align: center;
-            max-width: 400px;
-            padding: 40px;
-        `;
-
-        content.innerHTML = `
-            <h2 style="margin-bottom: 20px; font-size: 28px; font-weight: 300;">Enable Audio</h2>
-            <p style="margin-bottom: 30px; font-size: 16px; line-height: 1.5; opacity: 0.9;">
-                To use ambient sounds with your focus timer, please click the button below to enable audio.
-            </p>
-            <button id="unlock-audio-btn" style="
-                background: #8b5cf6;
+    // ONLY show unlock overlay when user tries to use sound (not on page load)
+    async requestAudioUnlock() {
+        return new Promise((resolve, reject) => {
+            const overlay = document.createElement('div');
+            overlay.id = 'audio-unlock-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-direction: column;
                 color: white;
-                border: none;
-                padding: 15px 30px;
-                border-radius: 12px;
-                font-size: 16px;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            " onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">
-                Enable Audio
-            </button>
-        `;
+                font-family: inherit;
+            `;
 
-        overlay.appendChild(content);
-        document.body.appendChild(overlay);
+            const content = document.createElement('div');
+            content.style.cssText = `
+                text-align: center;
+                max-width: 400px;
+                padding: 40px;
+            `;
 
-        // Handle unlock button click
-        const unlockBtn = document.getElementById('unlock-audio-btn');
-        unlockBtn.addEventListener('click', () => {
-            this.unlockAudio().then(() => {
+            content.innerHTML = `
+                <h2 style="margin-bottom: 20px; font-size: 28px; font-weight: 300;">Enable Audio</h2>
+                <p style="margin-bottom: 30px; font-size: 16px; line-height: 1.5; opacity: 0.9;">
+                    To use ambient sounds with your focus timer, please click the button below to enable audio.
+                </p>
+                <button id="unlock-audio-btn" style="
+                    background: #8b5cf6;
+                    color: white;
+                    border: none;
+                    padding: 15px 30px;
+                    border-radius: 12px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    margin-right: 10px;
+                " onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'">
+                    Enable Audio
+                </button>
+                <button id="cancel-audio-btn" style="
+                    background: transparent;
+                    color: #999;
+                    border: 1px solid #333;
+                    padding: 15px 30px;
+                    border-radius: 12px;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.borderColor='#666'; this.style.color='#ccc';" onmouseout="this.style.borderColor='#333'; this.style.color='#999';">
+                    Cancel
+                </button>
+            `;
+
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+
+            // Handle unlock button click
+            const unlockBtn = document.getElementById('unlock-audio-btn');
+            const cancelBtn = document.getElementById('cancel-audio-btn');
+            
+            unlockBtn.addEventListener('click', async () => {
+                try {
+                    await this.unlockAudio();
+                    overlay.remove();
+                    this.showNotification('✨ Audio enabled! Sounds ready');
+                    resolve();
+                } catch (error) {
+                    console.error('Failed to unlock audio:', error);
+                    overlay.remove();
+                    this.showNotification('Audio setup failed - sounds may not work');
+                    reject(error);
+                }
+            });
+
+            cancelBtn.addEventListener('click', () => {
                 overlay.remove();
-                this.showNotification('✨ Audio enabled! Ambient sounds ready');
-            }).catch((error) => {
-                console.error('Failed to unlock audio:', error);
-                overlay.remove();
-                this.showNotification('Audio setup failed - sounds may not work');
+                // Reset to silent mode
+                this.setAmbientSound('none');
+                reject(new Error('User cancelled audio unlock'));
             });
         });
     }
 
-    // NEW: Unlock audio after user interaction
+    // Unlock audio after user interaction
     async unlockAudio() {
         try {
             // Resume audio context if suspended
@@ -182,7 +192,7 @@ class PomodoroTimer {
                 await this.audioContext.resume();
             }
 
-            // Test audio playback
+            // Test audio playback with embedded sound
             const testAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBiyNz+7Yg0IJHGat7OekUBMJPqDb8smAMQUuhM/x0YlEChht4+64Zs');
             testAudio.volume = 0.01;
             await testAudio.play();
@@ -198,35 +208,101 @@ class PomodoroTimer {
         }
     }
 
+    // DEBUG: Test if audio file exists and is loadable
+    async debugAudioFile(path) {
+        console.log(`🔍 Testing audio file: ${path}`);
+        
+        try {
+            // Test 1: Can we fetch the file?
+            const response = await fetch(path);
+            console.log(`📁 File fetch status: ${response.status} ${response.statusText}`);
+            console.log(`📁 Content-Type: ${response.headers.get('content-type')}`);
+            console.log(`📁 File size: ${response.headers.get('content-length')} bytes`);
+            
+            if (!response.ok) {
+                throw new Error(`File not found: ${response.status}`);
+            }
+
+            // Test 2: Can we create an Audio object?
+            const audio = new Audio(path);
+            
+            return new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    reject(new Error('Audio load timeout'));
+                }, 10000); // 10 second timeout
+
+                audio.addEventListener('canplaythrough', () => {
+                    clearTimeout(timeout);
+                    console.log(`✅ Audio file loaded successfully: ${path}`);
+                    console.log(`🎵 Duration: ${audio.duration}s`);
+                    resolve(true);
+                }, { once: true });
+
+                audio.addEventListener('error', (e) => {
+                    clearTimeout(timeout);
+                    console.error(`❌ Audio load error:`, audio.error);
+                    reject(new Error(`Audio error: ${audio.error?.message || 'Unknown error'}`));
+                }, { once: true });
+
+                // Start loading
+                audio.preload = 'metadata';
+                audio.load();
+            });
+
+        } catch (error) {
+            console.error(`❌ Audio debug failed for ${path}:`, error);
+            throw error;
+        }
+    }
+
     initEventListeners() {
-        // Main button with spacebar support
+        // Main button
         this.elements.startBtn.addEventListener('click', () => {
-            this.ensureUserInteraction();
             this.toggleTimer();
         });
 
         // Mode tabs
         document.querySelectorAll('.mode-tab').forEach(tab => {
             tab.addEventListener('click', (e) => {
-                this.ensureUserInteraction();
                 if (!this.isRunning) {
                     this.switchMode(e.target.dataset.mode);
                 }
             });
         });
 
-        // Ambient sounds with user interaction handling
+        // FIXED: Ambient sounds - only unlock audio when clicking non-silent sounds
         document.querySelectorAll('.ambient-btn').forEach(btn => {
             btn.addEventListener('click', async (e) => {
-                this.ensureUserInteraction();
                 const sound = e.currentTarget.dataset.sound;
-                await this.setAmbientSound(sound);
+                
+                // If clicking silent mode, just switch directly
+                if (sound === 'none') {
+                    await this.setAmbientSound(sound);
+                    return;
+                }
+                
+                // If clicking a sound but audio isn't unlocked, show unlock overlay
+                if (!this.audioUnlocked) {
+                    try {
+                        await this.requestAudioUnlock();
+                        // If unlock successful, proceed with sound selection
+                        await this.setAmbientSound(sound);
+                    } catch (error) {
+                        console.log('User cancelled audio unlock or it failed');
+                        // Reset button to silent
+                        document.querySelectorAll('.ambient-btn').forEach(b => b.classList.remove('active'));
+                        document.querySelector('[data-sound="none"]').classList.add('active');
+                    }
+                } else {
+                    // Audio already unlocked, just set the sound
+                    await this.setAmbientSound(sound);
+                }
             });
             
-            // Preview on hover (desktop only)
+            // Preview on hover (only if audio is unlocked)
             if (window.matchMedia('(hover: hover)').matches) {
                 btn.addEventListener('mouseenter', (e) => {
-                    if (this.userInteracted) {
+                    if (this.audioUnlocked) {
                         const sound = e.currentTarget.dataset.sound;
                         this.previewAmbientSound(sound);
                     }
@@ -238,14 +314,10 @@ class PomodoroTimer {
         });
 
         // Audio Controls
-        this.elements.muteBtn.addEventListener('click', () => {
-            this.ensureUserInteraction();
-            this.toggleMute();
-        });
+        this.elements.muteBtn.addEventListener('click', () => this.toggleMute());
         
         let volumeTimeout;
         this.elements.volumeSlider.addEventListener('input', (e) => {
-            this.ensureUserInteraction();
             clearTimeout(volumeTimeout);
             volumeTimeout = setTimeout(() => {
                 this.setVolume(e.target.value);
@@ -265,25 +337,9 @@ class PomodoroTimer {
         // Theme toggle
         this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
 
-        // Global user interaction tracking
-        const trackInteraction = () => {
-            if (!this.userInteracted) {
-                this.userInteracted = true;
-                console.log('User interaction detected');
-            }
-        };
-
-        // Track various interaction types
-        ['click', 'keydown', 'touchstart'].forEach(event => {
-            document.addEventListener(event, trackInteraction, { once: false });
-        });
-
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
-            // Prevent shortcuts when typing
             if (e.target.tagName === 'INPUT') return;
-            
-            this.ensureUserInteraction();
             
             switch(e.code) {
                 case 'Space':
@@ -329,21 +385,6 @@ class PomodoroTimer {
             this.saveProgress();
             this.saveSettings();
         });
-    }
-
-    // NEW: Ensure user has interacted before audio operations
-    ensureUserInteraction() {
-        if (!this.userInteracted) {
-            this.userInteracted = true;
-        }
-        
-        // Try to unlock audio context if not already done
-        if (this.audioContext && this.audioContext.state === 'suspended' && !this.audioUnlocked) {
-            this.audioContext.resume().then(() => {
-                this.audioUnlocked = true;
-                console.log('Audio context resumed');
-            }).catch(console.error);
-        }
     }
 
     async initAudioContext() {
@@ -447,8 +488,8 @@ class PomodoroTimer {
         this.elements.startBtn.setAttribute('aria-label', 'Pause timer');
         this.elements.timerTime.classList.add('breathing');
 
-        // Start ambient sound if selected and user has interacted
-        if (this.userInteracted || this.audioUnlocked) {
+        // Only start ambient sound if audio is unlocked and not in silent mode
+        if (this.audioUnlocked && this.currentAmbient !== 'none') {
             this.playAmbientSound();
         }
 
@@ -591,6 +632,7 @@ class PomodoroTimer {
     async setAmbientSound(sound) {
         console.log('Setting ambient sound:', sound);
         
+        // Update UI first
         document.querySelectorAll('.ambient-btn').forEach(btn => {
             btn.classList.remove('active');
             btn.setAttribute('aria-pressed', 'false');
@@ -601,6 +643,7 @@ class PomodoroTimer {
             activeBtn.setAttribute('aria-pressed', 'true');
         }
 
+        // Stop current audio
         this.stopAmbientSound();
         this.stopVisualizer();
 
@@ -608,14 +651,17 @@ class PomodoroTimer {
         
         if (sound !== 'none') {
             this.elements.grainAnimation.classList.add('active');
-            if (this.userInteracted || this.audioUnlocked) {
+            
+            // Only preload if audio is unlocked
+            if (this.audioUnlocked) {
                 await this.preloadAudio(sound);
             }
         } else {
             this.elements.grainAnimation.classList.remove('active');
         }
 
-        if (this.isRunning && (this.userInteracted || this.audioUnlocked)) {
+        // Only start playing if timer is running and audio is unlocked
+        if (this.isRunning && this.audioUnlocked && sound !== 'none') {
             this.playAmbientSound();
         }
 
@@ -627,35 +673,50 @@ class PomodoroTimer {
         if (!path || this.audioSources.has(sound)) return;
         
         try {
-            const audio = new Audio(path);
-            audio.preload = 'auto';
-            await new Promise((resolve, reject) => {
-                audio.addEventListener('canplaythrough', resolve, { once: true });
-                audio.addEventListener('error', reject, { once: true });
-                setTimeout(() => reject(new Error('Timeout')), 5000);
-            });
+            console.log(`🔄 Preloading audio: ${sound}`);
+            
+            // Use our debug function to test the file thoroughly
+            await this.debugAudioFile(path);
+            
+            // If debug passes, add to cache
             this.audioSources.set(sound, path);
-            console.log(`Successfully preloaded: ${sound}`);
+            console.log(`✅ Successfully preloaded and cached: ${sound}`);
+            
         } catch (error) {
-            console.warn(`Failed to preload ${sound}:`, error);
-            this.showNotification(`Could not load ${sound} audio file`);
+            console.error(`❌ Failed to preload ${sound}:`, error);
+            
+            // Show detailed error to user
+            let errorMsg = `Could not load ${sound} audio file`;
+            if (error.message.includes('404') || error.message.includes('File not found')) {
+                errorMsg += ` - file not found (check audio/${sound}.mp3 exists)`;
+            } else if (error.message.includes('timeout')) {
+                errorMsg += ` - loading timeout (file may be too large)`;
+            } else if (error.message.includes('CORS')) {
+                errorMsg += ` - cross-origin request blocked`;
+            } else if (error.message.includes('Network')) {
+                errorMsg += ` - network error (check server/connection)`;
+            }
+            
+            this.showNotification(errorMsg);
         }
     }
 
     playAmbientSound() {
-        if (this.currentAmbient === 'none' || !this.userInteracted) return;
+        if (this.currentAmbient === 'none' || !this.audioUnlocked) return;
         
         const audioPath = this.getAudioPath(this.currentAmbient);
         if (!audioPath) return;
         
         try {
+            console.log(`🎵 Playing ambient sound: ${this.currentAmbient}`);
+            
             this.ambientSound = new Audio(audioPath);
             this.ambientSound.loop = true;
             this.ambientSound.volume = this.volume;
             this.ambientSound.muted = this.isMuted;
             
             // Connect to visualizer
-            if (this.audioContext && this.analyser && this.audioUnlocked) {
+            if (this.audioContext && this.analyser) {
                 try {
                     if (this.audioContext.state === 'suspended') {
                         this.audioContext.resume();
@@ -666,19 +727,20 @@ class PomodoroTimer {
                     this.analyser.connect(this.audioContext.destination);
                     this.startVisualizer();
                 } catch (e) {
-                    console.log('Audio routing:', e.message);
+                    console.log('Audio routing error:', e.message);
                 }
             }
             
-            // Play with proper error handling
+            // Play with detailed error handling
             this.ambientSound.play().then(() => {
-                console.log(`Playing: ${this.currentAmbient}`);
+                console.log(`✅ Successfully playing: ${this.currentAmbient}`);
             }).catch((error) => {
-                console.log('Audio playback failed:', error);
-                this.showNotification(`Unable to play ${this.currentAmbient} - please enable audio first`);
+                console.error(`❌ Playback failed for ${this.currentAmbient}:`, error);
+                this.showNotification(`Unable to play ${this.currentAmbient} - ${error.message}`);
             });
+            
         } catch (error) {
-            console.error('Error playing ambient sound:', error);
+            console.error(`❌ Error setting up ${this.currentAmbient}:`, error);
             this.showNotification(`Error loading ${this.currentAmbient} audio`);
         }
     }
@@ -764,7 +826,7 @@ class PomodoroTimer {
     }
     
     previewAmbientSound(sound) {
-        if (sound === 'none' || this.previewSound || !this.userInteracted) return;
+        if (sound === 'none' || this.previewSound || !this.audioUnlocked) return;
         
         const audioPath = this.getAudioPath(sound);
         if (!audioPath) return;
@@ -830,7 +892,7 @@ class PomodoroTimer {
     }
 
     playNotificationSound() {
-        if (!this.isMuted && this.elements.notificationSound && this.userInteracted) {
+        if (!this.isMuted && this.elements.notificationSound) {
             this.elements.notificationSound.volume = Math.min(0.5, this.volume);
             this.elements.notificationSound.play().catch(() => {});
         }
@@ -843,7 +905,7 @@ class PomodoroTimer {
 
         setTimeout(() => {
             this.elements.notification.classList.remove('show');
-        }, 4000);
+        }, 6000); // Show longer for error messages
     }
 
     updateFavicon(isRunning) {
@@ -899,8 +961,12 @@ class PomodoroTimer {
             this.isMuted = localStorage.getItem('isMuted') === 'true';
             this.updateMuteButton();
             
+            // ALWAYS load in silent mode, let user choose sounds
             const savedAmbient = localStorage.getItem('ambientSound') || 'none';
-            this.setAmbientSound(savedAmbient);
+            this.setAmbientSound('none'); // Force silent mode on load
+            
+            // But remember their preference for next time they click a sound button
+            this.lastSelectedSound = savedAmbient;
 
             const savedProgress = localStorage.getItem('pomodoroProgress');
             if (savedProgress) {
